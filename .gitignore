@@ -11,3 +11,6 @@ src/**/*.tsbuildinfo
 
 # Freebuff chat attachments (not project source)
 .cloud-attachments/
+
+.vercel
+.env*
