@@ -14,3 +14,6 @@ src/**/*.tsbuildinfo
 
 .vercel
 .env*
+
+# Re-allow env template after the blanket .env* rule (last match wins)
+!.env.example
