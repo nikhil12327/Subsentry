@@ -1,0 +1,17 @@
+import {PrismaClient} from '@prisma/client';
+import bcrypt from 'bcryptjs';
+const db=new PrismaClient();
+async function main(){
+ const org=await db.organization.upsert({where:{id:'brightloop-demo'},update:{},create:{id:'brightloop-demo',name:'Brightloop Software',currency:'INR',timezone:'Asia/Kolkata'}});
+ const email=(process.env.ADMIN_EMAIL||'admin@brightloop.example').toLowerCase();
+ await db.user.upsert({where:{email},update:{},create:{organizationId:org.id,name:'Samira Patel',email,passwordHash:await bcrypt.hash(process.env.ADMIN_PASSWORD||'ChangeMe123!',12),role:'ADMIN'}});
+ const plans=[['Starter',3900,'MONTHLY'],['Growth',8200,'MONTHLY'],['Business',96000,'YEARLY'],['Enterprise',144000,'YEARLY']] as const;
+ for(const [name,price,frequency] of plans)await db.plan.upsert({where:{organizationId_name:{organizationId:org.id,name}},update:{},create:{organizationId:org.id,name,price,frequency,minimumQuantity:1}});
+ const product=await db.product.upsert({where:{organizationId_name:{organizationId:org.id,name:'Brightloop Business Software'}},update:{},create:{organizationId:org.id,name:'Brightloop Business Software',type:'Software',price:2000,cost:700,notes:'Core subscription platform'}});
+ await db.productVariant.upsert({where:{productId_name:{productId:product.id,name:'Odoo'}},update:{},create:{productId:product.id,name:'Odoo',additionalPrice:560}});
+ await db.taxRule.upsert({where:{id:'brightloop-gst-demo'},update:{},create:{id:'brightloop-gst-demo',organizationId:org.id,name:'GST demo rule',jurisdiction:'IN-DEMO',rate:18}});
+ const people=[['Aarav Mehta','Northstar Labs','aarav@northstar.example','Enterprise'],['Maya Kapoor','Studio Parcel','maya@studioparcel.example','Growth'],['Ishaan Rao','Meridian Health','ishaan@meridian.example','Business'],['Tara Nair','Common Thread Co.','tara@commonthread.example','Growth'],['Rohan Shah','Fieldnote Systems','rohan@fieldnote.example','Starter'],['Ananya Bose','Daybreak Studio','ananya@daybreak.example','Business']] as const;
+ for(let i=0;i<people.length;i++){const [name,company,customerEmail,planName]=people[i];const customer=await db.customer.upsert({where:{organizationId_email:{organizationId:org.id,email:customerEmail}},update:{},create:{organizationId:org.id,name,company,email:customerEmail}});const plan=await db.plan.findUniqueOrThrow({where:{organizationId_name:{organizationId:org.id,name:planName}}});const status=i===2?'ACTIVE':i===4?'PAUSED':'ACTIVE';const start=new Date(Date.now()-30*86400000);const sub=await db.subscription.upsert({where:{organizationId_number:{organizationId:org.id,number:`SUB-DEMO-${i+1}`}},update:{},create:{organizationId:org.id,number:`SUB-DEMO-${i+1}`,customerId:customer.id,planId:plan.id,startDate:start,nextBillingDate:new Date(Date.now()+((i+1)*86400000)),anchorDay:start.getUTCDate(),frequency:plan.frequency,quantity:1,unitPrice:plan.price,status}});if(i===2){const already=await db.invoice.findUnique({where:{organizationId_idempotencyKey:{organizationId:org.id,idempotencyKey:`${sub.id}:seed`}}});if(!already)await db.invoice.create({data:{organizationId:org.id,number:'INV-DEMO-1003',customerId:customer.id,subscriptionId:sub.id,dueDate:new Date(Date.now()-3*86400000),subtotal:96000,tax:17280,total:113280,status:'CONFIRMED',idempotencyKey:`${sub.id}:seed`,lines:{create:{description:'Business annual subscription',quantity:1,unitPrice:96000,lineTotal:96000}}}})}}
+ console.log(`Seeded ${org.name}. Admin: ${email}`)
+}
+main().catch(e=>{console.error(e);process.exit(1)}).finally(()=>db.$disconnect());
