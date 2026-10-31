@@ -1,0 +1,62 @@
+{
+  "name": "subsentry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch server/src/index.ts",
+    "dev:web": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/unit/*.test.ts",
+    "preview": "vite preview --host 0.0.0.0",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "start": "tsx server/src/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@tanstack/react-query": "latest",
+    "@vitejs/plugin-react": "latest",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "latest",
+    "pdfkit": "^0.20.2",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-hook-form": "latest",
+    "react-router-dom": "latest",
+    "recharts": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pdfkit": "^0.17.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "concurrently": "^9.2.1",
+    "prisma": "^6.19.0",
+    "tsx": "^4.23.15"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.0": true,
+    "@prisma/engines@6.19.0": true,
+    "prisma@6.19.0": true,
+    "esbuild@0.28.2": true
+  }
+}
